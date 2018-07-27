@@ -1,50 +1,15 @@
-#-*-coding:utf-8-*-
 import os, argparse
 import xml.dom.minidom as minidom
 import numpy as np
-import py_cpu_nms
 import metrics
 
 parser = argparse.ArgumentParser(description="Object Detection Calculation")
-parser.add_argument("-r","--result_list", default="result_val100_base.txt", type=str, help="path of the result list file")
+parser.add_argument("-r","--result_list", default="C:/Users/Wu/Desktop/xxd/demo/jshh_jueyuanzi_result.txt", type=str, help="path of the result list file")
 parser.add_argument("-th","--iou_thres", default=0.5, type=float, help="threshold for IoU, Default: 0.5")
 parser.add_argument("-c","--conf_thresh", default=0.01, type=float, help="threshold for confidence score, Default: 0.01")
 parser.add_argument("-g","--gt_path", default="/root/data/dangerioustotal/ImageSets/val100.txt", type=str, help="path of the annotation list file")
 parser.add_argument("-i","--image_dir", default="/root/data/dangerioustotal/Annotations", type=str, help="path of the image annotation folder")
 parser.add_argument("-t","--type", default="excavator", type=str, help="type of the class to calculate and show")
-
-classmap_dict = {
-'dg':'daodixian',
-'sg':'daodixian',
-'jyzzb':'jueyuanzi',
-'jyhqx':'xianjia',
-'jyhsh':'xianjia',
-'jyhtl':'xianjia',
-'jyhyw':'xianjia',
-'xjqx':'xianjia',
-'fzchy':'fangzhenchui',
-'fzcpx':'fangzhenchui',
-'fzcsh':'fangzhenchui',
-'fzcxs':'fangzhenchui',
-'bmqk':'xiaojingju',
-'lslmqk':'xiaojingju',
-'lsqbm':'xiaojingju',
-'lsqdp':'xiaojingju',
-'lsqlm':'xiaojingju',
-'lsqxz':'xiaojingju',
-'lsxs':'xiaojingju',
-'wtxztc':'xiaojingju',
-'tjbm':'jichu',
-'tjjs':'jichu',
-'tjtf':'jichu',
-'tjwl':'jichu',
-'tjxx':'jichu',
-'fnsssh':'fushusheshi',
-'bspsh':'fushusheshi',
-'bsptl':'fushusheshi',
-'nc':'yiwu',
-'yw':'yiwu'}
-
 
 def get_data_from_tag(node,tag):
     return node.getElementsByTagName(tag)[0].childNodes[0].data
@@ -55,8 +20,7 @@ def bb_intersection_over_union(boxA, boxB):
     yA = max(boxA[1], boxB[1])
     xB = min(boxA[2], boxB[2])
     yB = min(boxA[3], boxB[3])
-    if (xB < xA) or (yB < yA):
-        return 0.0
+
     # compute the area of intersection rectangle
     interArea = (xB - xA + 1) * (yB - yA + 1)
 
@@ -122,13 +86,6 @@ for idx, path in enumerate(gt_file):
         x2 = float(get_data_from_tag(obj, "xmax"))
         y2 = float(get_data_from_tag(obj, "ymax"))
         cls_idx = str(get_data_from_tag(obj, "name")).lower().strip()
-
-        if cls_idx in classmap_dict:
-            cls_idx = classmap_dict[cls_idx]
-        else:
-            continue
-        if cls_idx != opt.type:
-            continue
         boxes[ix, :] = [x1, y1, x2, y2]
         gt_classes[ix] = cls_idx
         gt_count[cls_idx] = gt_count.get(cls_idx,0)+1
@@ -140,10 +97,6 @@ for idx, path in enumerate(gt_file):
     # Compare prediction result with groundtruth
     if img_name in result_dict:
         results = result_dict[img_name]
-        print('before:', results)
-        results = py_cpu_nms.nms(results, thresh = 0.5)
-        print('after:', results)
-        print('\n')
         for result in results:
             cls_idx, score, bbox_x1, bbox_y1, bbox_x2, bbox_y2 = result
             pred_box = [bbox_x1,bbox_y1,bbox_x2,bbox_y2]
